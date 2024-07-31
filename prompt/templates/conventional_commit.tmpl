@@ -4,17 +4,73 @@ For some of these files changes where too big and were omitted in the files diff
 Determine the best label for the commit.
 
 Here are the labels you might choose from, which include but are not limited to:
+- build: Changes to the build system, build tools, or external dependencies.
+  Examples:
+  - Upgrading from Webpack 4 to Webpack 5
+  - Adding a new Babel plugin to the build process
+  - Modifying Gradle build scripts in an Android project
 
-- build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
-- chore: Updating libraries, copyrights or other repo setting, includes updating dependencies.
-- ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, GitHub Actions)
-- docs: Non-code changes, such as fixing typos or adding new documentation (example scopes: Markdown file)
-- feat: a commit of the type feat introduces a new feature to the codebase
-- fix: A commit of the type fix patches a bug in your codebase
-- perf: A code change that improves performance
-- refactor: A code change that neither fixes a bug nor adds a feature
-- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
-- test: Adding missing tests or correcting existing tests
+- chore: Routine maintenance tasks, updates to non-production code, or changes to repository settings.
+  Examples:
+  - Updating the version of lodash in package.json
+  - Adding a new .gitignore rule to exclude log files
+  - Updating the copyright year in license files
+
+- ci: Modifications to CI/CD configuration and scripts.
+  Examples:
+  - Adding a new job to the GitHub Actions workflow to run integration tests
+  - Configuring Travis CI to deploy to a staging environment after successful builds
+  - Optimizing the caching strategy in CircleCI to speed up builds
+
+- docs: Non-code documentation changes.
+  Examples:
+  - Adding a "Getting Started" section to the README.md
+  - Updating API documentation for a newly added endpoint
+  - Fixing a typo in the contributing guidelines
+
+- feat: Introduction of new features or significant enhancements.
+  Examples:
+  - Adding user authentication functionality to a web application
+  - Implementing a new algorithm for product recommendations
+  - Creating a dark mode option for a mobile app
+
+- fix: Corrections to resolve bugs or errors in the codebase.
+  Examples:
+  - Resolving a null pointer exception in the user registration process
+  - Fixing a CSS issue causing layout problems on mobile devices
+  - Correcting a logical error in a sorting function
+
+- perf: Code changes specifically aimed at improving performance.
+  Examples:
+  - Optimizing database queries to reduce load times
+  - Implementing lazy loading for images in a web application
+  - Refactoring a recursive algorithm to use dynamic programming for better efficiency
+
+- refactor: Code modifications that improve structure without changing functionality.
+  Examples:
+  - Breaking down a large monolithic function into smaller, more manageable functions
+  - Converting a class-based React component to a functional component with hooks
+  - Standardizing error handling across the application
+
+- style: Changes related to code formatting and style.
+  Examples:
+  - Adjusting indentation to conform to project style guidelines
+  - Adding missing semicolons in JavaScript files
+  - Renaming variables to follow a consistent naming convention
+
+- test: Additions, modifications, or corrections to the testing suite.
+  Examples:
+  - Writing unit tests for a newly implemented user registration function
+  - Adding integration tests for API endpoints
+  - Updating mock data in existing tests to cover more edge cases
+
+- log: Changes related to logging, monitoring, or observability features in the codebase.
+  Examples:
+  - Adding new log statements to track user actions
+  - Implementing error logging for better debugging
+  - Integrating a third-party logging service
+  - Modifying log levels for different environments (development, staging, production)
+  - Adding performance metrics logging
 
 
 THE FILE SUMMARIES:
