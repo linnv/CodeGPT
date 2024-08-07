@@ -27,6 +27,7 @@ var (
 
 	preview        bool
 	diffUnified    int
+	diffHashes     string
 	excludeList    []string
 	httpsProxy     string
 	socksProxy     string
@@ -48,6 +49,8 @@ func init() {
 	commitCmd.PersistentFlags().BoolVar(&preview, "preview", false, "preview commit message")
 	commitCmd.PersistentFlags().IntVar(&diffUnified, "diff_unified", 3,
 		"generate diffs with <n> lines of context, default is 3")
+	commitCmd.PersistentFlags().StringVar(&diffHashes, "diff_hashes", "HEAD^..HEAD",
+		"generate diffs with two hashes e.g. one,two deflat is HEAD HEAD^")
 	commitCmd.PersistentFlags().StringVar(&commitModel, "model", "gpt-3.5-turbo", "select openai model")
 	commitCmd.PersistentFlags().StringVar(&commitLang, "lang", "en", "summarizing language uses English by default")
 	commitCmd.PersistentFlags().StringSliceVar(&excludeList, "exclude_list", []string{},
@@ -78,6 +81,7 @@ var commitCmd = &cobra.Command{
 		}
 
 		g := git.New(
+			git.WithDiffHashes(viper.GetString("git.diff_hashes")),
 			git.WithDiffUnified(viper.GetInt("git.diff_unified")),
 			git.WithExcludeList(viper.GetStringSlice("git.exclude_list")),
 			git.WithEnableAmend(commitAmend),

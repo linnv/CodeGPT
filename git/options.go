@@ -1,5 +1,10 @@
 package git
 
+import (
+	"log"
+	"strings"
+)
+
 // Option is an interface that specifies instrumentation configuration options.
 type Option interface {
 	apply(*config)
@@ -42,9 +47,32 @@ func WithEnableAmend(val bool) Option {
 	})
 }
 
+// WithDiffHashes returns an Option that sets the diffHashes field of a config object to the given value.
+// If the given value is empty, then the default value is used.
+func WithDiffHashes(val string) Option {
+	return optionFunc(func(c *config) {
+		split := strings.Split(val, "..")
+		if len(split) == 2 {
+			c.diffHashes[0] = split[0]
+			c.diffHashes[1] = split[1]
+			if c.diffHashes[0] == "" {
+				c.diffHashes[0] = "HEAD"
+			}
+			if c.diffHashes[1] == "" {
+				c.diffHashes[1] = "HEAD^"
+			}
+			log.Println("c.diffHashes", c.diffHashes)
+		} else {
+			c.diffHashes[0] = "HEAD"
+			c.diffHashes[1] = "HEAD^"
+		}
+	})
+}
+
 // config is a struct that stores configuration options for the instrumentation.
 type config struct {
 	diffUnified int
+	diffHashes  [2]string
 	excludeList []string
 	isAmend     bool
 }

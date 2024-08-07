@@ -15,6 +15,7 @@ func init() {
 
 // availableKeys is a list of available config keys
 var availableKeys = map[string]string{
+	"git.diff_hashes":          "generate diffs with two hashes e.g. one,two deflat is HEAD HEAD^",
 	"git.diff_unified":         "generate diffs with <n> lines of context, default is 3",
 	"git.exclude_list":         "exclude file from git diff command",
 	"git.template_file":        "template file for commit message",

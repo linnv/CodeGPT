@@ -23,6 +23,10 @@ func check() error {
 		viper.Set("git.diff_unified", diffUnified)
 	}
 
+	if diffHashes != "" {
+		viper.Set("git.diff_hashes", diffHashes)
+	}
+
 	if len(excludeList) > 0 {
 		viper.Set("git.exclude_list", excludeList)
 	}

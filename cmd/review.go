@@ -21,6 +21,8 @@ var maxTokens int
 func init() {
 	reviewCmd.PersistentFlags().IntVar(&diffUnified, "diff_unified", 3,
 		"generate diffs with <n> lines of context, default is 3")
+	reviewCmd.PersistentFlags().StringVar(&diffHashes, "diff_hashes", "HEAD^..HEAD",
+		"generate diffs with two hashes e.g. one,two deflat is HEAD HEAD^")
 	reviewCmd.PersistentFlags().IntVar(&maxTokens, "max_tokens", 300,
 		"the maximum number of tokens to generate in the chat completion.")
 	reviewCmd.PersistentFlags().StringVar(&commitModel, "model", "gpt-3.5-turbo", "select openai model")
@@ -42,6 +44,7 @@ var reviewCmd = &cobra.Command{
 
 		g := git.New(
 			git.WithDiffUnified(viper.GetInt("git.diff_unified")),
+			git.WithDiffHashes(viper.GetString("git.diff_hashes")),
 			git.WithExcludeList(viper.GetStringSlice("git.exclude_list")),
 			git.WithEnableAmend(commitAmend),
 		)

@@ -3,6 +3,7 @@ package git
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -25,6 +26,7 @@ type Command struct {
 	// Generate diffs with <n> lines of context instead of the usual three
 	diffUnified int
 	excludeList []string
+	diffHashes  [2]string
 	isAmend     bool
 }
 
@@ -42,10 +44,17 @@ func (c *Command) diffNames() *exec.Cmd {
 		"--name-only",
 	}
 
+	// add  diffHashes parse from command-line wihch contains start and end hash, if not set, then use --staged or get diff from the start and end hash
+	// if isAmend is true, then diff --name-only HEAD^ HEAD
 	if c.isAmend {
 		args = append(args, "HEAD^", "HEAD")
 	} else {
-		args = append(args, "--staged")
+		log.Println("c.diffHashes", c.diffHashes)
+		if c.diffHashes[0] != "" && c.diffHashes[1] != "" {
+			args = append(args, c.diffHashes[0], c.diffHashes[1])
+		} else {
+			args = append(args, "--staged")
+		}
 	}
 
 	excludedFiles := c.excludeFiles()
@@ -68,7 +77,11 @@ func (c *Command) diffFiles() *exec.Cmd {
 	if c.isAmend {
 		args = append(args, "HEAD^", "HEAD")
 	} else {
-		args = append(args, "--staged")
+		if c.diffHashes[0] != "" && c.diffHashes[1] != "" {
+			args = append(args, c.diffHashes[0], c.diffHashes[1])
+		} else {
+			args = append(args, "--staged")
+		}
 	}
 
 	excludedFiles := c.excludeFiles()
@@ -206,6 +219,7 @@ func New(opts ...Option) *Command {
 	// Instantiate a new Command object with the configurations from the config object
 	cmd := &Command{
 		diffUnified: cfg.diffUnified,
+		diffHashes:  cfg.diffHashes,
 		// Append the user-defined excludeList to the default excludeFromDiff
 		excludeList: append(excludeFromDiff, cfg.excludeList...),
 		isAmend:     cfg.isAmend,
