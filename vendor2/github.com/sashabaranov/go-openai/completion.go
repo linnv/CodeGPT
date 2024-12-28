@@ -26,6 +26,8 @@ var (
 // GPT3 Models are designed for text-based tasks. For code-specific
 // tasks, please refer to the Codex series of models.
 const (
+	GPTDeepseekChat       = "deepseek-chat"
+	GPTDeepseekCoder      = "deepseek-coder"
 	O1Mini                = "o1-mini"
 	O1Mini20240912        = "o1-mini-2024-09-12"
 	O1Preview             = "o1-preview"
@@ -105,6 +107,8 @@ var O1SeriesModels = map[string]struct{}{
 
 var disabledModelsForEndpoints = map[string]map[string]bool{
 	"/completions": {
+		GPTDeepseekChat:      true,
+		GPTDeepseekCoder:     true,
 		O1Mini:               true,
 		O1Mini20240912:       true,
 		O1Preview:            true,
