@@ -2,15 +2,13 @@ package openai
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net/http"
-	"net/url"
+	"regexp"
 
 	"github.com/appleboy/CodeGPT/core"
+	"github.com/appleboy/CodeGPT/proxy"
 
 	openai "github.com/sashabaranov/go-openai"
-	"golang.org/x/net/proxy"
 )
 
 // DefaultModel is the default OpenAI model to use if one is not provided.
@@ -54,25 +52,36 @@ func (c *Client) Completion(ctx context.Context, content string) (*core.Response
 	return &core.Response{
 		Content: resp.Content,
 		Usage: core.Usage{
-			PromptTokens:     resp.Usage.PromptTokens,
-			CompletionTokens: resp.Usage.CompletionTokens,
-			TotalTokens:      resp.Usage.TotalTokens,
+			PromptTokens:            resp.Usage.PromptTokens,
+			CompletionTokens:        resp.Usage.CompletionTokens,
+			TotalTokens:             resp.Usage.TotalTokens,
+			CompletionTokensDetails: resp.Usage.CompletionTokensDetails,
 		},
 	}, nil
 }
 
 // GetSummaryPrefix is an API call to get a summary prefix using function call.
 func (c *Client) GetSummaryPrefix(ctx context.Context, content string) (*core.Response, error) {
-	resp, err := c.CreateFunctionCall(ctx, content, SummaryPrefixFunc)
-	if err != nil || len(resp.Choices) != 1 {
-		return nil, err
+	var resp openai.ChatCompletionResponse
+	var err error
+	if checkO1Serial.MatchString(c.model) {
+		resp, err = c.CreateChatCompletion(ctx, content)
+		if err != nil || len(resp.Choices) != 1 {
+			return nil, err
+		}
+	} else {
+		resp, err = c.CreateFunctionCall(ctx, content, SummaryPrefixFunc)
+		if err != nil || len(resp.Choices) != 1 {
+			return nil, err
+		}
 	}
 
 	msg := resp.Choices[0].Message
 	usage := core.Usage{
-		PromptTokens:     resp.Usage.PromptTokens,
-		CompletionTokens: resp.Usage.CompletionTokens,
-		TotalTokens:      resp.Usage.TotalTokens,
+		PromptTokens:            resp.Usage.PromptTokens,
+		CompletionTokens:        resp.Usage.CompletionTokens,
+		TotalTokens:             resp.Usage.TotalTokens,
+		CompletionTokensDetails: resp.Usage.CompletionTokensDetails,
 	}
 	if len(msg.ToolCalls) == 0 {
 		return &core.Response{
@@ -87,6 +96,8 @@ func (c *Client) GetSummaryPrefix(ctx context.Context, content string) (*core.Re
 		Usage:   usage,
 	}, nil
 }
+
+var checkO1Serial = regexp.MustCompile(`o1-(mini|preview)`)
 
 // CreateChatCompletion is an API call to create a function call for a chat message.
 func (c *Client) CreateFunctionCall(
@@ -108,7 +119,7 @@ func (c *Client) CreateFunctionCall(
 		PresencePenalty:  c.presencePenalty,
 		Messages: []openai.ChatCompletionMessage{
 			{
-				Role:    openai.ChatMessageRoleSystem,
+				Role:    openai.ChatMessageRoleAssistant,
 				Content: "You are a helpful assistant.",
 			},
 			{
@@ -123,6 +134,11 @@ func (c *Client) CreateFunctionCall(
 				Name: f.Name,
 			},
 		},
+	}
+
+	if checkO1Serial.MatchString(c.model) {
+		req.MaxTokens = 0
+		req.MaxCompletionTokens = c.maxTokens
 	}
 
 	return c.client.CreateChatCompletion(ctx, req)
@@ -142,7 +158,7 @@ func (c *Client) CreateChatCompletion(
 		PresencePenalty:  c.presencePenalty,
 		Messages: []openai.ChatCompletionMessage{
 			{
-				Role:    openai.ChatMessageRoleSystem,
+				Role:    openai.ChatMessageRoleAssistant,
 				Content: "You are a helpful assistant.",
 			},
 			{
@@ -150,6 +166,11 @@ func (c *Client) CreateChatCompletion(
 				Content: content,
 			},
 		},
+	}
+
+	if checkO1Serial.MatchString(c.model) {
+		req.MaxTokens = 0
+		req.MaxCompletionTokens = c.maxTokens
 	}
 
 	return c.client.CreateChatCompletion(ctx, req)
@@ -197,32 +218,15 @@ func New(opts ...Option) (*Client, error) {
 		c.BaseURL = cfg.baseURL
 	}
 
-	// Create a new HTTP transport.
-	tr := &http.Transport{}
-	if cfg.skipVerify {
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec
-	}
-
-	// Create a new HTTP client with the specified timeout and proxy, if any.
-	httpClient := &http.Client{
-		Timeout: cfg.timeout,
-	}
-
-	if cfg.proxyURL != "" {
-		proxyURL, _ := url.Parse(cfg.proxyURL)
-		tr.Proxy = http.ProxyURL(proxyURL)
-	} else if cfg.socksURL != "" {
-		dialer, err := proxy.SOCKS5("tcp", cfg.socksURL, nil, proxy.Direct)
-		if err != nil {
-			return nil, fmt.Errorf("can't connect to the proxy: %s", err)
-		}
-		tr.DialContext = dialer.(proxy.ContextDialer).DialContext
-	}
-
-	// Set the HTTP client to use the default header transport with the specified headers.
-	httpClient.Transport = &DefaultHeaderTransport{
-		Origin: tr,
-		Header: NewHeaders(cfg.headers),
+	httpClient, err := proxy.New(
+		proxy.WithProxyURL(cfg.proxyURL),
+		proxy.WithSocksURL(cfg.socksURL),
+		proxy.WithSkipVerify(cfg.skipVerify),
+		proxy.WithTimeout(cfg.timeout),
+		proxy.WithHeaders(cfg.headers),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("can't create a new HTTP client: %w", err)
 	}
 
 	// Set the OpenAI client to use the default configuration with Azure-specific options, if the provider is Azure.

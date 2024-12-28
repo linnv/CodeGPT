@@ -1,19 +1,22 @@
-package gemini
+package anthropic
 
 import (
 	"errors"
+	"time"
+
+	"github.com/liushuangls/go-anthropic/v2"
 )
 
 var (
-	errorsMissingToken = errors.New("missing gemini api key")
-	errorsMissingModel = errors.New("missing model")
+	errorsMissingAPIKey = errors.New("missing api key")
+	errorsMissingModel  = errors.New("missing model")
 )
 
-const (
+var (
 	defaultMaxTokens   = 300
-	defaultModel       = "gemini-1.5-flash-latest"
-	defaultTemperature = 1.0
-	defaultTopP        = 1.0
+	defaultModel       = anthropic.ModelClaude3Haiku20240307
+	defaultTemperature = float32(1.0)
+	defaultTopP        = float32(1.0)
 )
 
 // Option is an interface that specifies instrumentation configuration options.
@@ -33,17 +36,17 @@ func (o optionFunc) apply(c *config) {
 	o(c)
 }
 
-// WithToken is a function that returns an Option, which sets the token field of the config struct.
-func WithToken(val string) Option {
+// WithAPIKey is a function that returns an Option, which sets the token field of the config struct.
+func WithAPIKey(val string) Option {
 	return optionFunc(func(c *config) {
-		c.token = val
+		c.apiKey = val
 	})
 }
 
 // WithModel is a function that returns an Option, which sets the model field of the config struct.
 func WithModel(val string) Option {
 	return optionFunc(func(c *config) {
-		c.model = val
+		c.model = anthropic.Model(val)
 	})
 }
 
@@ -79,20 +82,54 @@ func WithTopP(val float32) Option {
 	})
 }
 
+// WithProxyURL is a function that returns an Option, which sets the proxyURL field of the config struct.
+func WithProxyURL(val string) Option {
+	return optionFunc(func(c *config) {
+		c.proxyURL = val
+	})
+}
+
+// WithSocksURL is a function that returns an Option, which sets the socksURL field of the config struct.
+func WithSocksURL(val string) Option {
+	return optionFunc(func(c *config) {
+		c.socksURL = val
+	})
+}
+
+// WithSkipVerify returns a new Option that sets the skipVerify for the client configuration.
+func WithSkipVerify(val bool) Option {
+	return optionFunc(func(c *config) {
+		c.skipVerify = val
+	})
+}
+
+// WithTimeout returns a new Option that sets the timeout for the client configuration.
+// It takes a time.Duration value representing the timeout duration.
+// It returns an optionFunc that sets the timeout field of the configuration to the provided value.
+func WithTimeout(val time.Duration) Option {
+	return optionFunc(func(c *config) {
+		c.timeout = val
+	})
+}
+
 // config is a struct that stores configuration options for the instrumentation.
 type config struct {
-	token       string
-	model       string
+	apiKey      string
+	model       anthropic.Model
 	maxTokens   int
 	temperature float32
 	topP        float32
+	proxyURL    string
+	socksURL    string
+	skipVerify  bool
+	timeout     time.Duration
 }
 
 // valid checks whether a config object is valid, returning an error if it is not.
 func (cfg *config) valid() error {
 	// Check that the token is not empty.
-	if cfg.token == "" {
-		return errorsMissingToken
+	if cfg.apiKey == "" {
+		return errorsMissingAPIKey
 	}
 
 	if cfg.model == "" {

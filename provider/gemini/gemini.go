@@ -15,7 +15,7 @@ import (
 type Client struct {
 	client      *genai.GenerativeModel
 	model       string
-	maxTokens   int
+	maxTokens   int32
 	temperature float32
 	topP        float32
 	debug       bool
@@ -84,7 +84,7 @@ func (c *Client) GetSummaryPrefix(ctx context.Context, content string) (*core.Re
 	return r, nil
 }
 
-func New(opts ...Option) (c *Client, err error) {
+func New(ctx context.Context, opts ...Option) (c *Client, err error) {
 	// Create a new config object with the given options.
 	cfg := newConfig(opts...)
 
@@ -100,13 +100,13 @@ func New(opts ...Option) (c *Client, err error) {
 		temperature: cfg.temperature,
 	}
 
-	client, err := genai.NewClient(context.Background(), option.WithAPIKey(cfg.token))
+	client, err := genai.NewClient(ctx, option.WithAPIKey(cfg.token))
 	if err != nil {
 		return nil, err
 	}
 
 	engine.client = client.GenerativeModel(engine.model)
-	engine.client.MaxOutputTokens = util.Int32Ptr(int32(engine.maxTokens))
+	engine.client.MaxOutputTokens = util.Int32Ptr(engine.maxTokens)
 	engine.client.Temperature = util.Float32Ptr(engine.temperature)
 	engine.client.TopP = util.Float32Ptr(engine.topP)
 

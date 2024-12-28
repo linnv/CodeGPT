@@ -1,3 +1,3 @@
-module CodeGPT/vendor2/github.com/sashabaranov/go-openai
+module CodeGPT/vendor/github.com/sashabaranov/go-openai
 
-go 1.22.2
+go 1.22.7
