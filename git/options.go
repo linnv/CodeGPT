@@ -56,16 +56,22 @@ func WithDiffHashes(val string) Option {
 			c.diffHashes[0] = split[0]
 			c.diffHashes[1] = split[1]
 			if c.diffHashes[0] == "" {
-				c.diffHashes[0] = "HEAD"
+				c.diffHashes[0] = "HEAD^"
 			}
 			if c.diffHashes[1] == "" {
-				c.diffHashes[1] = "HEAD^"
+				c.diffHashes[1] = "HEAD"
 			}
-			log.Println("c.diffHashes", c.diffHashes)
 		} else {
-			c.diffHashes[0] = "HEAD"
-			c.diffHashes[1] = "HEAD^"
+			c.diffHashes[0] = "HEAD^"
+			c.diffHashes[1] = "HEAD"
 		}
+
+		if c.diffHashes[0] == "HEAD^" && c.diffHashes[1] == "HEAD" {
+			//we use staged changes
+			c.diffHashes[0] = ""
+			c.diffHashes[1] = ""
+		}
+		log.Println("c.diffHashes", c.diffHashes)
 	})
 }
 
